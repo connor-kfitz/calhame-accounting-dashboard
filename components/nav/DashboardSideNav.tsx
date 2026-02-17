@@ -54,7 +54,7 @@ export default function DashboardSideNav() {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarSeparator/>
+      <SidebarSeparator className="mx-0"/>
 
       <SidebarFooter className="border-t border-sidebar-border px-3 py-4">
         <SidebarMenu>
