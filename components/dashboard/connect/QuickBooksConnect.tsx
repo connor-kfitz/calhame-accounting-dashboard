@@ -13,15 +13,15 @@ export default function QuickBooksConnect() {
 
   function handleConnect() {
     // Todo: Implement real connection logic with QuickBooks API
-    setIsConnecting(true)
+    setIsConnecting(true);
     setTimeout(() => {
-      setConnected(true)
-      setIsConnecting(false)
-    }, 1200)
+      setConnected(true);
+      setIsConnecting(false);
+    }, 1200);
   }
 
   function handleDisconnect() {
-    setConnected(false)
+    setConnected(false);
   }
 
   return (
@@ -54,12 +54,12 @@ export default function QuickBooksConnect() {
             <Button onClick={handleConnect} disabled={isConnecting}>
               {isConnecting ? (
                 <>
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin"/>
                   Connecting...
                 </>
               ) : (
                 <>
-                  <Link2 className="mr-2 h-4 w-4" />
+                  <Link2 className="mr-2 h-4 w-4"/>
                   Connect to QuickBooks
                 </>
               )}
@@ -67,11 +67,11 @@ export default function QuickBooksConnect() {
           ) : (
             <div className="flex gap-3">
               <Button variant="outline" size="sm">
-                <RefreshCw className="mr-2 h-4 w-4" />
+                <RefreshCw className="mr-2 h-4 w-4"/>
                 Sync Now
               </Button>
               <Button variant="outline" size="sm" onClick={handleDisconnect}>
-                <Link2Off className="mr-2 h-4 w-4" />
+                <Link2Off className="mr-2 h-4 w-4"/>
                 Disconnect
               </Button>
             </div>
@@ -79,5 +79,5 @@ export default function QuickBooksConnect() {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
