@@ -19,7 +19,7 @@ export default function Connect() {
         <Button asChild>
           <Link href="/dashboard/connect" className="inline-flex items-center gap-4">
             <Link2 className="h-4 w-4"/>
-            Connect an account
+            Connect a provider
           </Link>
         </Button>
       </CardContent>
