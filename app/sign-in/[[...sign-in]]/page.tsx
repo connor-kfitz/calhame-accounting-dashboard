@@ -1,9 +1,9 @@
-import { LoginForm } from "@/components/login/LoginForm";
+import SignInForm from "@/components/auth/SignInForm";
 
-export default function LoginPage() {
+export default function SignInPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
-      <LoginForm/>
+      <SignInForm/>      
     </main>
   );
 }

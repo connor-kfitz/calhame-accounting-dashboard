@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { LogOut, BookOpen } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter,SidebarHeader, SidebarMenu,SidebarMenuButton, SidebarMenuItem, SidebarSeparator} from "@/components/ui/sidebar";
 import { dashboardSideNavItems } from "@/lib/constants";
+import { SignOutButton } from "@clerk/nextjs";
+import { Button } from "../ui/button";
 
 export default function DashboardSideNav() {
 
@@ -60,10 +62,12 @@ export default function DashboardSideNav() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground">
-              <Link href="/login" className="flex items-center gap-3">
-                <LogOut className="h-4 w-4"/>
-                Sign out
-              </Link>
+              <SignOutButton redirectUrl="/sign-in">
+                <Button variant="link">
+                  <LogOut className="h-4 w-4"/>
+                  Sign out
+                </Button>
+              </SignOutButton>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
