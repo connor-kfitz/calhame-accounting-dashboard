@@ -8,7 +8,7 @@ export default function SignInForm() {
   return (
     <div className="flex w-full max-w-md flex-col items-center gap-6">
       <AuthHeader/>
-      <SignIn/>
+      <SignIn forceRedirectUrl="/dashboard"/>
     </div>
   );
 }
