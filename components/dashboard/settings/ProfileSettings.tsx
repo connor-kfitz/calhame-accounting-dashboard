@@ -7,48 +7,40 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { useUpdateProfile } from "@/hooks/useUsers";
 
-export default function UpdateProfileForm() {
+interface ProfileSettingsProps {
+  initialData: UpdateProfileForm;
+}
 
-  const [form, setForm] = useState<UpdateProfileForm>({
-    name: "Connor Fitzsimmons",
-    email: "connorkfitzsimmons@fitzsystems.ca",
-    company: "Fitzsystems"
-  });
+export default function ProfileSettings({ initialData }: ProfileSettingsProps) {
+  const { updateProfile, isLoading: isSaving } = useUpdateProfile();
 
-  const [isSaving, setIsSaving] = useState(false);
+  const [form, setForm] = useState<UpdateProfileForm>(initialData);
 
   async function handleSave(e: React.SyntheticEvent<HTMLFormElement>) {
-    // Todo: Integrate with Clerk
     e.preventDefault();
-    setIsSaving(true);
-    await new Promise((r) => setTimeout(r, 700));
-    setIsSaving(false);
+    await updateProfile({ company: form.company });
   }
 
   return (
     <Card className="border-border shadow-sm">
       <CardHeader>
-        <CardTitle className="text-base font-semibold text-foreground">Profile</CardTitle>
+        <CardTitle className="text-base font-semibold text-foreground">Company</CardTitle>
         <CardDescription className="text-muted-foreground">
-          Update your personal information
+          Update your company information
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <form onSubmit={handleSave} className="flex flex-col gap-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="settings-name" className="text-foreground">Full name</Label>
-              <Input id="settings-name" name="name" value={form.name} onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}/>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="settings-email" className="text-foreground">Email</Label>
-              <Input id="settings-email" name="email" value={form.email} onChange={(e) => setForm(prev => ({ ...prev, email: e.target.value }))}/>
-            </div>
-          </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="settings-company" className="text-foreground">Company name</Label>
-            <Input id="settings-company" name="company" value={form.company} onChange={(e) => setForm(prev => ({ ...prev, company: e.target.value }))}/>
+            <Input 
+              id="settings-company" 
+              name="company" 
+              value={form.company} 
+              onChange={(e) => setForm({ company: e.target.value })} 
+            />
           </div>
           <Separator className="my-2"/>
           <div className="flex justify-end">
