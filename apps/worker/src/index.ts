@@ -4,8 +4,8 @@ dotenv.config();
 
 import { Worker } from 'bullmq';
 import { redisConnection } from './lib/redis';
-import { ACCOUNTING_QUEUE } from './queues/accounting-queue';
 import { handleSyncCompany } from './jobs/sync-company-job';
+import { ACCOUNTING_QUEUE, SYNC_COMPANY_JOB } from '@repo/shared';
 
 console.log('Worker starting...');
 
@@ -13,7 +13,7 @@ const worker = new Worker(
   ACCOUNTING_QUEUE,
   async job => {
     switch (job.name) {
-      case 'sync-company':
+      case SYNC_COMPANY_JOB:
         await handleSyncCompany(job);
         break;
 

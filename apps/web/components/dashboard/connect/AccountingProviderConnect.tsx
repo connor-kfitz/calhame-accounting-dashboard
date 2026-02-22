@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { capitalizeFirstLetter } from "@/lib/utils";
+import { AccountingProvider } from "@repo/shared";
 import { Link2, Link2Off, RefreshCw } from "lucide-react";
 import { useState } from "react";
 

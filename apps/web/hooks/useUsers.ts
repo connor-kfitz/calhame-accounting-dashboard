@@ -1,3 +1,4 @@
+import { UpdateProfileForm } from "@repo/shared";
 import { useState } from "react";
 
 interface UpdateProfileReturn {

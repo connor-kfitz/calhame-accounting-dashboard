@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useUpdateProfile } from "@/hooks/useUsers";
+import { UpdateProfileForm } from "@repo/shared";
 
 interface ProfileSettingsProps {
   initialData: UpdateProfileForm;
