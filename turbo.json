@@ -8,7 +8,8 @@
       "outputs": [".next/**", "!.next/cache/**"],
       "env": [
         "CLERK_SECRET_KEY",
-        "DATABASE_URL"
+        "DATABASE_URL",
+        "REDIS_URL"
       ]
     },
     "lint": {

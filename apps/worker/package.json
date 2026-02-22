@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx src/index.ts",
+    "dev": "dotenv -e .env tsx src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -12,12 +12,13 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^25.3.0",
+    "dotenv-cli": "^11.0.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@repo/shared": "*",
     "bullmq": "^5.70.0",
-    "dotenv": "^17.3.1",
-    "@repo/shared": "*"
+    "dotenv": "^17.3.1"
   }
 }
