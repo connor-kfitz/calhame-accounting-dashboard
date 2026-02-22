@@ -1,5 +1,5 @@
 import { Job } from 'bullmq';
-import { syncQuickBooksCompany } from '../services/quickbooks-service';
+import { syncQuickBooksCompany } from '../services/quickbooks.service';
 
 interface SyncCompanyJobData {
   companyId: string;
