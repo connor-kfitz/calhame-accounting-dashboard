@@ -10,18 +10,35 @@ export default function QuickBooksConnect() {
 
   const [connected, setConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [error, setError] = useState<string>("");
 
-  function handleConnect() {
-    // Todo: Implement real connection logic with QuickBooks API
+  async function handleConnect() {
+    // Todo: Implement real connection logic with Microservice and QuickBooks OAuth flow
     setIsConnecting(true);
-    setTimeout(() => {
+    setError("");
+
+    try {
+      const res = await fetch('/api/microservice/sync-company', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyId: "companyId123", provider: 'quickbooks' })
+      });
+
+      if (!res.ok) throw new Error(`Failed to connect to QuickBooks. Status: ${res.status}`);
+     
       setConnected(true);
+    } catch (err) {
+      console.error(err);
+      setError("Unable to connect to QuickBooks.");
+      setConnected(false);
+    } finally {
       setIsConnecting(false);
-    }, 1200);
+    }
   }
 
   function handleDisconnect() {
     setConnected(false);
+    setError("");
   }
 
   return (
@@ -51,27 +68,37 @@ export default function QuickBooksConnect() {
       <CardContent>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           {!connected ? (
-            <Button onClick={handleConnect} disabled={isConnecting}>
-              {isConnecting ? (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin"/>
-                  Connecting...
-                </>
-              ) : (
-                <>
-                  <Link2 className="mr-2 h-4 w-4"/>
-                  Connect to QuickBooks
-                </>
-              )}
-            </Button>
+            error ? (
+              <div>
+                <p className="text-sm text-destructive mb-2">There was an error connecting to QuickBooks.</p>
+                <Button variant="outline" size="sm" onClick={handleConnect} disabled={isConnecting}>
+                  <RefreshCw className={isConnecting ? "mr-1 h-4 w-4 animate-spin" : "mr-1 h-4 w-4"}/>
+                  {isConnecting ? "Retrying..." : "Retry"}
+                </Button>
+              </div>
+            ) : (
+              <Button size="sm" onClick={handleConnect} disabled={isConnecting}>
+                {isConnecting ? (
+                  <>
+                    <RefreshCw className="mr-1 h-4 w-4 animate-spin"/>
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <Link2 className="mr-1 h-4 w-4"/>
+                    Connect to QuickBooks
+                  </>
+                )}
+              </Button>
+            )
           ) : (
             <div className="flex gap-3">
               <Button variant="outline" size="sm">
-                <RefreshCw className="mr-2 h-4 w-4"/>
+                <RefreshCw className="mr-1 h-4 w-4"/>
                 Sync Now
               </Button>
               <Button variant="outline" size="sm" onClick={handleDisconnect}>
-                <Link2Off className="mr-2 h-4 w-4"/>
+                <Link2Off className="mr-1 h-4 w-4"/>
                 Disconnect
               </Button>
             </div>
