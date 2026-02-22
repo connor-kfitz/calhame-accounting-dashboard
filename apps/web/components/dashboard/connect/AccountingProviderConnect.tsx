@@ -3,17 +3,24 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { capitalizeFirstLetter } from "@/lib/utils";
 import { Link2, Link2Off, RefreshCw } from "lucide-react";
 import { useState } from "react";
 
-export default function QuickBooksConnect() {
+interface AccountingProviderConnectProps {
+  provider: AccountingProvider;
+}
+
+export default function AccountingProviderConnect({ provider }: AccountingProviderConnectProps) {
 
   const [connected, setConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string>("");
 
+  const providerCapitalized = capitalizeFirstLetter(provider);
+
   async function handleConnect() {
-    // Todo: Implement real connection logic with Microservice and QuickBooks OAuth flow
+    // Todo: Implement real connection logic with Microservice and Provider OAuth flow
     setIsConnecting(true);
     setError("");
 
@@ -21,15 +28,15 @@ export default function QuickBooksConnect() {
       const res = await fetch('/api/microservice/sync-company', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ companyId: "companyId123", provider: 'quickbooks' })
+        body: JSON.stringify({ companyId: "companyId123", provider })
       });
 
-      if (!res.ok) throw new Error(`Failed to connect to QuickBooks. Status: ${res.status}`);
+      if (!res.ok) throw new Error(`Failed to connect to ${providerCapitalized}. Status: ${res.status}`);
      
       setConnected(true);
     } catch (err) {
       console.error(err);
-      setError("Unable to connect to QuickBooks.");
+      setError(`Unable to connect to ${providerCapitalized}.`);
       setConnected(false);
     } finally {
       setIsConnecting(false);
@@ -47,10 +54,10 @@ export default function QuickBooksConnect() {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-base font-semibold text-foreground">
-              QuickBooks Integration
+              {providerCapitalized} Integration
             </CardTitle>
             <CardDescription className="mt-1 text-muted-foreground">
-              Connect your QuickBooks Online account to automatically sync invoices, expenses, and financial reports.
+              Connect your {providerCapitalized} account to automatically sync invoices, expenses, and financial reports.
             </CardDescription>
           </div>
           <Badge
@@ -70,7 +77,7 @@ export default function QuickBooksConnect() {
           {!connected ? (
             error ? (
               <div>
-                <p className="text-sm text-destructive mb-2">There was an error connecting to QuickBooks.</p>
+                <p className="text-sm text-destructive mb-2">There was an error connecting to {providerCapitalized}.</p>
                 <Button variant="outline" size="sm" onClick={handleConnect} disabled={isConnecting}>
                   <RefreshCw className={isConnecting ? "mr-1 h-4 w-4 animate-spin" : "mr-1 h-4 w-4"}/>
                   {isConnecting ? "Retrying..." : "Retry"}
@@ -86,7 +93,7 @@ export default function QuickBooksConnect() {
                 ) : (
                   <>
                     <Link2 className="mr-1 h-4 w-4"/>
-                    Connect to QuickBooks
+                    Connect to {providerCapitalized}
                   </>
                 )}
               </Button>
