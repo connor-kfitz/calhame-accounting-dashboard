@@ -11,12 +11,11 @@ export async function getCompanyName(realmId: string, accessToken: string): Prom
   );
 
   if (!response.ok) {
-    const errorText = await response.text();
-    console.error("Failed to fetch company name:", errorText);
     throw new Error("Failed to fetch company name");
   }
 
   const data = await response.json();
+  
   return data.CompanyInfo.CompanyName;
 
 }

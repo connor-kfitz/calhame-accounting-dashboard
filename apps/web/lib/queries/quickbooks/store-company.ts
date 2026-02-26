@@ -1,8 +1,10 @@
 import { pool } from "../../db";
+import type { PoolClient } from "pg";
 
-export async function storeCompany(companyId: string, name: string) {
+export async function storeCompany(companyId: string, name: string, client?: PoolClient) {
+  const database = client ?? pool;
 
-  const result = await pool.query(
+  const result = await database.query(
     `INSERT INTO companies (company_id, name, created_at, updated_at)
      VALUES ($1, $2, NOW(), NOW())
      ON CONFLICT (company_id)

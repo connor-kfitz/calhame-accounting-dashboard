@@ -1,19 +1,21 @@
 import { pool } from "@/lib/db";
+import type { PoolClient } from "pg";
 
-export async function storeCompanyMembership(clerkId: string, companyId: string, role: string = "member") {
+export async function storeCompanyMembership(clerkId: string, companyId: string, role: string = "member", client?: PoolClient) {
+	const database = client ?? pool;
 
-  const userResult = await pool.query(
+	const userResult = await database.query(
     `SELECT id FROM users WHERE clerk_id = $1`,
     [clerkId]
   );
 
 	if (userResult.rowCount === 0) {
-    return Response.json({ error: "User not found" }, { status: 404 });
+		throw new Error("User not found");
   }
 
   const userId = userResult.rows[0].id as string;
 
-	const result = await pool.query(
+	const result = await database.query(
 		`INSERT INTO company_memberships (user_id, company_id, role, created_at)
 		 VALUES ($1, $2, $3, NOW())
 		 ON CONFLICT (user_id, company_id)
@@ -29,4 +31,3 @@ export async function storeCompanyMembership(clerkId: string, companyId: string,
 
 	return result.rows[0];
 }
-

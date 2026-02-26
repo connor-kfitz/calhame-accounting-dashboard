@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { auth } from "@clerk/nextjs/server";
+import { pool } from "@/lib/db";
 import { storeCompany } from "@/lib/queries/quickbooks/store-company";
 import { getCompanyName } from "@/lib/queries/quickbooks/get-company-name";
 import { storeAccountingConnection } from "@/lib/queries/store-accounting-connection";
@@ -77,12 +78,25 @@ export async function GET(req: NextRequest) {
     const refreshTokenExpiresAt = new Date(Date.now() + data.x_refresh_token_expires_in * 1000);
 
     const companyName = await getCompanyName(realmId, data.access_token);
-    const company = await storeCompany(realmId, companyName);
-    await storeCompanyMembership(clerkUserId, company.id, "member");
-    await storeAccountingConnection(
-      realmId, "quickbooks", data.access_token,
-      data.refresh_token, accessTokenExpiresAt, refreshTokenExpiresAt
-    );
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      const company = await storeCompany(realmId, companyName, client);
+      await storeCompanyMembership(clerkUserId, company.id, "member", client);
+      await storeAccountingConnection(
+        realmId, "quickbooks", data.access_token, data.refresh_token,
+        accessTokenExpiresAt, refreshTokenExpiresAt, client
+      );
+
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
     
     return Response.redirect(
       "http://localhost:3000/dashboard/connect",

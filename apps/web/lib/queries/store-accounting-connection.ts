@@ -1,5 +1,6 @@
 import { pool } from "@/lib/db";
 import { encryptTokenForStorage } from "@/lib/token-crypto";
+import type { PoolClient } from "pg";
 
 export async function storeAccountingConnection(
   companyId: string,
@@ -7,16 +8,18 @@ export async function storeAccountingConnection(
   accessToken: string,
   refreshToken: string,
   accessTokenExpiresAt: Date,
-  refreshTokenExpiresAt: Date
+  refreshTokenExpiresAt: Date,
+  client?: PoolClient
 ) {
+  const databbase = client ?? pool;
 
-  const providerResult = await pool.query(
+  const providerResult = await databbase.query(
     `SELECT id FROM accounting_providers WHERE display_name = $1`,
     [providerName]
   );
 
   if (providerResult.rowCount === 0) {
-    return Response.json({ error: "Provider not found" }, { status: 404 });
+    throw new Error("Provider not found");
   }
   
   const providerId = providerResult.rows[0].id as string;
@@ -24,7 +27,7 @@ export async function storeAccountingConnection(
   const encryptedAccessToken = encryptTokenForStorage(accessToken);
   const encryptedRefreshToken = encryptTokenForStorage(refreshToken);
 
-  const result = await pool.query(
+  const result = await databbase.query(
     `WITH company AS (
        SELECT id
        FROM companies
