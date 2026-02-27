@@ -1,134 +1,104 @@
-# Turborepo starter
+# Calhame Accounting Dashboard
 
-This Turborepo starter is maintained by the Turborepo core team.
+Monorepo for an accounting dashboard that connects to QuickBooks, stores data in Postgres, and runs background sync jobs via BullMQ + Redis.
 
-## Using this example
+## Repo layout
 
-Run the following command:
+- `apps/web`: Next.js App Router app (UI + API routes) with Clerk auth
+- `apps/worker`: BullMQ worker that processes background sync jobs
+- `packages/shared`: shared constants/types
+- `infrastructure/redis`: local Redis via Docker Compose
+- `infrastructure/postgres/schema-dump.sql`: Postgres schema bootstrap/reference
 
-```sh
-npx create-turbo@latest
-```
+## Tech stack
 
-## What's inside?
+- Next.js 16 (App Router), React 19, Tailwind
+- Clerk authentication
+- Postgres (`pg`)
+- BullMQ + Redis background jobs
+- QuickBooks OAuth + API integration
 
-This Turborepo includes the following packages/apps:
+## Prerequisites
 
-### Apps and Packages
+- Node.js `>=18` and `npm`
+- Postgres database (local or hosted)
+- Redis (local Docker is the easiest)
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+## Environment variables
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+This repo expects env vars in the app(s) where they run.
 
-### Utilities
+### Web app (`apps/web/.env.local`)
 
-This Turborepo has some additional tools already setup for you:
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`: Clerk publishable key
+- `CLERK_SECRET_KEY`: Clerk secret key (server-side)
+- `CLERK_WEBHOOK_SECRET`: Clerk webhook signing secret (Svix)
+- `DATABASE_URL`: Postgres connection string
+- `REDIS_URL`: Redis connection string (used to enqueue jobs)
+- `TOKEN_ENCRYPTION_KEY`: 32-byte key (base64 or hex) used to encrypt tokens for storage
+- `NEXT_PUBLIC_BASE_URL`: absolute base URL for server-side fetches (local: `http://localhost:3000`)
+- `QUICKBOOKS_CLIENT_ID`: Intuit app client id
+- `QUICKBOOKS_CLIENT_SECRET`: Intuit app client secret
+- `QUICKBOOKS_REDIRECT_URI`: OAuth redirect URI (must match your Intuit app config)
+- `QUICKBOOKS_BASE_URL`: QuickBooks API base URL (sandbox or production)
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+### Worker (`apps/worker/.env`)
 
-### Build
+- `REDIS_URL`: Redis connection string (used to consume jobs)
 
-To build all apps and packages, run the following command:
+## Local development
 
-```
-cd my-turborepo
+1. Install dependencies:
 
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
+	- `npm install`
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
+2. Start Redis:
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+	- `docker compose -f infrastructure/redis/docker-compose.yml up -d`
+	- set `REDIS_URL=redis://localhost:6379`
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+3. Start/prepare Postgres:
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+	- create a Postgres database and set `DATABASE_URL`
+	- (optional) bootstrap the schema from the dump:
+	- macOS/Linux: `psql "$DATABASE_URL" -f infrastructure/postgres/schema-dump.sql`
+	- Windows (PowerShell): `psql $env:DATABASE_URL -f infrastructure/postgres/schema-dump.sql`
 
-### Develop
+4. Create env files:
 
-To develop all apps and packages, run the following command:
+	- `apps/web/.env.local`
+	- `apps/worker/.env`
 
-```
-cd my-turborepo
+5. Run everything (web + worker) from the repo root:
 
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+	- `npm run dev`
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+The web app runs on `http://localhost:3000`.
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+## Useful scripts (root)
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+- `npm run dev`: runs `apps/web` and `apps/worker` via Turborepo
+- `npm run build`: builds all packages/apps
+- `npm run lint`: lints all packages/apps
+- `npm run check-types`: type-checks all packages/apps
+- `npm run format`: runs Prettier
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+## Background sync jobs
 
-### Remote Caching
+The web app enqueues jobs to Redis/BullMQ, and the worker consumes them.
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+- Enqueue: `POST /api/microservice/sync-company` with JSON `{ "companyId": string, "provider": "quickbooks" }`
+- Consume: `apps/worker` listens on the shared accounting queue and handles `SYNC_COMPANY_JOB`
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+## QuickBooks integration (OAuth)
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+- Start OAuth: `GET /api/quickbooks/auth`
+- Callback: `GET /api/quickbooks/callback`
 
-```
-cd my-turborepo
+## Clerk webhook
 
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
+Configure a Clerk webhook to point at:
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
+- `POST /api/webhooks/clerk`
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+This keeps the local `users` table in sync with Clerk user create/update events.
