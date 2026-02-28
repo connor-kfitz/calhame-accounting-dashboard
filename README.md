@@ -36,7 +36,6 @@ This repo expects env vars in the app(s) where they run.
 - `DATABASE_URL`: Postgres connection string
 - `REDIS_URL`: Redis connection string (used to enqueue jobs)
 - `TOKEN_ENCRYPTION_KEY`: 32-byte key (base64 or hex) used to encrypt tokens for storage
-- `NEXT_PUBLIC_BASE_URL`: absolute base URL for server-side fetches (local: `http://localhost:3000`)
 - `QUICKBOOKS_CLIENT_ID`: Intuit app client id
 - `QUICKBOOKS_CLIENT_SECRET`: Intuit app client secret
 - `QUICKBOOKS_REDIRECT_URI`: OAuth redirect URI (must match your Intuit app config)

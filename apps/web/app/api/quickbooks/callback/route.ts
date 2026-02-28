@@ -7,6 +7,9 @@ import { getCompanyName } from "@/lib/queries/quickbooks/get-company-name";
 import { storeAccountingConnection } from "@/lib/queries/store-accounting-connection";
 import { storeCompanyMembership } from "@/lib/queries/store-company-membership";
 import { getUserByClerkId } from "@/lib/queries/users/get-user-by-clerk-id";
+import { accountingQueue } from "@/lib/accounting-queue";
+import { SYNC_COMPANY_JOB } from "@repo/shared";
+import { getIdByDisplayName } from "@/lib/queries/providers/get-id-by-display-name";
 
 const clientId = process.env.QUICKBOOKS_CLIENT_ID!;
 const clientSecret = process.env.QUICKBOOKS_CLIENT_SECRET!;
@@ -92,7 +95,8 @@ export async function GET(req: NextRequest) {
       const userResult = await getUserByClerkId(clerkId, client);
       const userId = userResult[0].id;
 
-      const company = await storeCompany(realmId, companyName, "quickbooks", client);
+      const providerId = await getIdByDisplayName("quickbooks", client);
+      const company = await storeCompany(realmId, companyName, providerId, client);
       await storeCompanyMembership(userId, company.id, "member", client);
 
       await storeAccountingConnection(
@@ -100,7 +104,11 @@ export async function GET(req: NextRequest) {
         accessTokenExpiresAt, refreshTokenExpiresAt, client
       );
 
-      // Todo: Start Sync Job Here
+      if (!company.id || !providerId) {
+        return new Response(JSON.stringify({ error: { message: 'Missing parameters' } }), { status: 400 });
+      }
+    
+      await accountingQueue.add(SYNC_COMPANY_JOB, { companyId: company.id, providerId: providerId });
 
       await client.query("COMMIT");
     } catch (error) {

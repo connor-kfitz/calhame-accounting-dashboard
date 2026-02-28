@@ -57,3 +57,14 @@ CREATE TABLE accounting_connections (
     updated_at TIMESTAMP NOT NULL DEFAULT now()
 
 );
+
+CREATE TABLE provider_sync_state (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    connection_id UUID NOT NULL REFERENCES accounting_connections(id) ON DELETE CASCADE,
+    entity_type TEXT NOT NULL,
+    cursor TEXT,
+    last_synced_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
+
+    UNIQUE(connection_id, entity_type)
+);
