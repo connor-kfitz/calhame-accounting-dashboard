@@ -10,6 +10,7 @@ import { getUserByClerkId } from "@/lib/queries/users/get-user-by-clerk-id";
 import { accountingQueue } from "@/lib/accounting-queue";
 import { SYNC_COMPANY_JOB } from "@repo/shared";
 import { getIdByDisplayName } from "@/lib/queries/providers/get-id-by-display-name";
+import { storeSyncState } from "@/lib/queries/provider-sync-state/store-sync-state";
 
 const clientId = process.env.QUICKBOOKS_CLIENT_ID!;
 const clientSecret = process.env.QUICKBOOKS_CLIENT_SECRET!;
@@ -99,10 +100,12 @@ export async function GET(req: NextRequest) {
       const company = await storeCompany(realmId, companyName, providerId, client);
       await storeCompanyMembership(userId, company.id, "member", client);
 
-      await storeAccountingConnection(
+      const accountingConnection = await storeAccountingConnection(
         company.id, data.access_token, data.refresh_token,
         accessTokenExpiresAt, refreshTokenExpiresAt, client
       );
+
+      await storeSyncState(accountingConnection.id, "accounting", client);
 
       if (!company.id || !providerId) {
         return new Response(JSON.stringify({ error: { message: 'Missing parameters' } }), { status: 400 });
