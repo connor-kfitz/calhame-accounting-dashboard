@@ -1,15 +1,8 @@
 import { pool } from "@/lib/db";
 import type { PoolClient } from "pg";
 
-export default async function getTopExpense(
-  companyId: string,
-  year: number,
-  client?: PoolClient
-) {
+export default async function getTopExpense(companyId: string, startDate: string, endDate: string, client?: PoolClient) {
   const database = client ?? pool;
-
-  const startDate = `${year}-01-01`;
-  const endDate = `${year}-12-31`;
 
   const result = await database.query(`
     SELECT
@@ -21,8 +14,7 @@ export default async function getTopExpense(
     GROUP BY category
     ORDER BY total DESC
     LIMIT 1;
-  `, [companyId, startDate, endDate]
-  );
+  `, [companyId, startDate, endDate]);
 
   return result.rows[0];
 }

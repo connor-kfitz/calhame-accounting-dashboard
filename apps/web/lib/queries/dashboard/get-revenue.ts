@@ -1,15 +1,8 @@
 import { pool } from "@/lib/db";
 import type { PoolClient } from "pg";
 
-export default async function getRevenue(
-	companyId: string,
-	year: number,
-	client?: PoolClient
-) {
+export default async function getRevenue(companyId: string, startDate: string, endDate: string, client?: PoolClient) {
 	const database = client ?? pool;
-
-	const startDate = `${year}-01-01`;
-	const endDate = `${year}-12-31`;
 
 	const result = await database.query(`
     SELECT COALESCE(SUM(amount), 0) AS total_revenue

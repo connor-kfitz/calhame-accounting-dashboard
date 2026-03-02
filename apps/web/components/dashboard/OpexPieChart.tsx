@@ -35,7 +35,7 @@ export default function OpexPieChart({ data }: OpexPieChartProps) {
     acc[item.name] = {
       label: item.name,
       color: COLORS[index % COLORS.length] ?? "#64748b",
-    };
+    }
     return acc;
   }, {} as Record<string, { label: string; color: string }>);
 

@@ -12,7 +12,7 @@ export default async function DashboardPage() {
 
   if (!clerkId) redirect("/sign-in");
   
-  const dashboardData = await getDashboardData(clerkId, 2026);
+  const dashboardData = await getDashboardData(clerkId, "year", 2026);
 
   return (
     <main className="w-full overflow-y-auto p-4 lg:p-8">
