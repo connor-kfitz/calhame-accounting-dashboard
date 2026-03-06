@@ -14,16 +14,11 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
       );
     }
 
-    const { id: companyMembershipId } = await params;
-
-		if (!companyMembershipId) {
-			return Response.json(
-        { error: { message: "Invalid company membership id" } },
-        { status: 400 }
-      );
-		}
-
-    const userResult = await getUserByClerkId(clerkUserId);
+    const [{ id: companyMembershipId }, userResult] = await Promise.all([
+      params,
+      getUserByClerkId(clerkUserId)
+    ]);
+    
     const userId = userResult.id;
 
     await deleteCompanyMembershipsById(companyMembershipId, userId);

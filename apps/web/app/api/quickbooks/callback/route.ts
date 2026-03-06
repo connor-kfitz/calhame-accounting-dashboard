@@ -88,16 +88,20 @@ export async function GET(req: NextRequest) {
     const accessTokenExpiresAt = new Date(Date.now() + data.expires_in * 1000);
     const refreshTokenExpiresAt = new Date(Date.now() + data.x_refresh_token_expires_in * 1000);
 
-    const companyName = await getCompanyName(realmId, data.access_token);
-    const client = await pool.connect();
+    const [companyName, client] = await Promise.all([
+      getCompanyName(realmId, data.access_token),
+      pool.connect()
+    ]);
 
     try {
       await client.query("BEGIN");
 
-      const userResult = await getUserByClerkId(clerkId, client);
+      const [userResult, provider] = await Promise.all([
+        getUserByClerkId(clerkId, client),
+        getProviderByDisplayName("quickbooks", client)
+      ]);
+      
       const userId = userResult.id;
-
-      const provider = await getProviderByDisplayName("quickbooks", client);
       const company = await upsertCompany(realmId, companyName, provider.id, client);
       await upsertCompanyMembership(userId, company.id, "member", client);
 

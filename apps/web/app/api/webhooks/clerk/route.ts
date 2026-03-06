@@ -5,8 +5,10 @@ import { WebhookEvent } from "@clerk/nextjs/server";
 import { pool } from "@/lib/db";
 
 export async function POST(req: Request) {
-  const payload = await req.text();
-  const headerPayload = await headers();
+  const [payload, headerPayload] = await Promise.all([
+    req.text(),
+    headers()
+  ]);
 
   const svixId = headerPayload.get("svix-id");
   const svixTimestamp = headerPayload.get("svix-timestamp");

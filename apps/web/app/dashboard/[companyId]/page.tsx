@@ -16,9 +16,13 @@ export default async function DynamicDashboardPage({ params, searchParams }: {
 
   if (!clerkId) redirect("/sign-in");
 
-  const { companyId } = await params;
-  const {quarter, year } = await searchParams ?? {};
+  const [{ companyId }, searchParamsData] = await Promise.all([
+    params,
+    searchParams
+  ]);
 
+  const { quarter, year } = searchParamsData ?? {};
+  
   const quarterValue = quarter ?? "year";
   const yearValue = year ? parseInt(year, 10) : new Date().getFullYear();
   
