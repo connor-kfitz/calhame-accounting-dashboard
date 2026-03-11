@@ -9,12 +9,13 @@ import { dashboardSideNavItems } from "@/lib/constants";
 import { SignOutButton } from "@clerk/nextjs";
 import { Button } from "../ui/button";
 import { CompanyListItem } from "@repo/shared";
+import { Fragment } from "react/jsx-runtime";
 
 interface DashboardSideNavProps {
   companies: CompanyListItem[];
 }
 
-export default function DashboardSideNav({ companies }:  DashboardSideNavProps) {
+export default function DashboardSideNav({ companies }: DashboardSideNavProps) {
 
   const pathname = usePathname();
 
@@ -38,8 +39,8 @@ export default function DashboardSideNav({ companies }:  DashboardSideNavProps) 
             const isDashboard = item.href === "/dashboard";
 
             return (
-              <>
-                <SidebarMenuItem key={item.href}>
+              <Fragment key={item.href}>
+                <SidebarMenuItem>
                   <SidebarMenuButton
                     asChild
                     isActive={isActive}
@@ -88,7 +89,7 @@ export default function DashboardSideNav({ companies }:  DashboardSideNavProps) 
                     })}
                   </>
                 )}
-              </>
+              </Fragment>
             );
           })}
         </SidebarMenu>
