@@ -19,7 +19,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@repo/shared": "file:../../packages/shared",
+    "@repo/shared": "*",
     "bullmq": "^5.70.0",
     "dotenv": "^17.3.1",
     "pg": "^8.18.0"
