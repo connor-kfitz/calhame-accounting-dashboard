@@ -1,5 +1,5 @@
-import { Entity } from "../types";
-import { AccountingQueueJob, Queue } from "../types/queues.types";
+import { Entity } from "../types/index.js";
+import { AccountingQueueJob, Queue } from "../types/queues.types.js";
 
 export const ACCOUNTING_QUEUE: Queue = 'accounting-sync';
 

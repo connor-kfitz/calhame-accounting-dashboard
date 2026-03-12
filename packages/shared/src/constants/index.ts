@@ -1,2 +1,2 @@
-export * from "./queues.constants";
-export * from "./dashboard.constants";
+export * from "./queues.constants.js";
+export * from "./dashboard.constants.js";

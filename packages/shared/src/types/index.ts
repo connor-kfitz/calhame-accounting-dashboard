@@ -1,2 +1,2 @@
-export * from "./dashboard.types";
-export * from "./backend.types";
+export * from "./dashboard.types.js";
+export * from "./backend.types.js";
