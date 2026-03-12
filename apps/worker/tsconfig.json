@@ -4,7 +4,8 @@
     "outDir": "dist",
     "rootDir": "src",
     "module": "esnext",
-    "target": "ES2022"
+    "target": "ES2022",
+    "noEmit": false
   },
   "include": [
     "src"
