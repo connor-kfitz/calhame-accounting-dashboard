@@ -1,3 +1,3 @@
 export type Queue = "accounting-sync";
 
-export type AccountingQueueJob = "sync-company";
+export type AccountingQueueJob = "sync-company" | "scheduled-sync";
