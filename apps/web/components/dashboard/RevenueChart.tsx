@@ -18,8 +18,8 @@ export default function RevenueChart({ data }: RevenueChartProps) {
   }
 
   const config = {
-    revenue: { label: "Revenue", color: "#3b82f6" },
-    opex: { label: "OpEx", color: "#ef4444" }
+    revenue: { label: "Revenue", color: "var(--chart-1)" },
+    opex: { label: "OpEx", color: "var(--chart-2)" }
   }
 
   const sortedData = [...data]
@@ -35,7 +35,6 @@ export default function RevenueChart({ data }: RevenueChartProps) {
     })
     .sort((a, b) => a.monthIndex - b.monthIndex);
 
-  // Don't render if all data points are null
   const hasData = sortedData.some((row) => row.revenue !== null || row.opex !== null);
   if (!hasData) {
     return null;
@@ -62,18 +61,18 @@ export default function RevenueChart({ data }: RevenueChartProps) {
             <Line
               type="monotone"
               dataKey="revenue"
-              stroke="#3b82f6"
+              stroke="var(--chart-1)"
               strokeWidth={2}
-              dot={{ r: 3, fill: "#3b82f6", strokeWidth: 0 }}
+              dot={{ r: 3, fill: "var(--chart-1)", strokeWidth: 0 }}
               activeDot={{ r: 5 }}
               connectNulls
             />
             <Line
               type="monotone"
               dataKey="opex"
-              stroke="#ef4444"
+              stroke="var(--chart-2)"
               strokeWidth={2}
-              dot={{ r: 3, fill: "#ef4444", strokeWidth: 0 }}
+              dot={{ r: 3, fill: "var(--chart-2)", strokeWidth: 0 }}
               activeDot={{ r: 5 }}
               connectNulls
             />
