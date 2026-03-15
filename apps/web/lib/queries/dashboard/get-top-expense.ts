@@ -8,9 +8,9 @@ export default async function getTopExpense(companyId: string, startDate: string
     SELECT
       category,
       SUM(amount) AS total
-    FROM expenses
+    FROM expense_transactions
     WHERE company_id = $1
-    AND date BETWEEN $2 AND $3
+    AND transaction_date BETWEEN $2 AND $3
     GROUP BY category
     ORDER BY total DESC
     LIMIT 1;

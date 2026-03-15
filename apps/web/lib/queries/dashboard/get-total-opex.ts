@@ -6,9 +6,9 @@ export default async function getTotalOpex(companyId: string, startDate: string,
 
   const result = await database.query(`
     SELECT COALESCE(SUM(amount), 0) AS total_opex
-    FROM expenses
+    FROM expense_transactions
     WHERE company_id = $1
-    AND date BETWEEN $2 AND $3;
+    AND transaction_date BETWEEN $2 AND $3;
   `, [companyId, startDate, endDate]);
 
   return result.rows[0].total_opex;

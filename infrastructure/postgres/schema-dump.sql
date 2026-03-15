@@ -71,49 +71,6 @@ CREATE TABLE provider_sync_state (
 
 -- Entities Layer --
 
-CREATE TABLE revenue (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-
-    provider_entity_id TEXT NOT NULL,
-    provider_entity_type TEXT NOT NULL, 
-    provider_account_id TEXT,          
-    provider_account_name TEXT,         
-
-    accounting_method TEXT NOT NULL DEFAULT
-
-    source TEXT NOT NULL,
-    amount NUMERIC(18,2) NOT NULL,
-    date DATE NOT NULL,
-
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at TIMESTAMP NOT NULL DEFAULT now(),
-
-    CONSTRAINT revenue_provider_unique
-        UNIQUE (company_id, provider_entity_id, provider_entity_type)
-);
-
-CREATE TABLE cogs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-    description TEXT,
-    amount NUMERIC NOT NULL,
-    date DATE NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT now()
-);
-
-CREATE TABLE expenses (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-    category TEXT NOT NULL,
-    vendor TEXT,
-    amount NUMERIC NOT NULL,
-    date DATE NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT now()
-);
-
--- This allows storing individual transactions with accurate dates instead of P&L summaries
-
 -- Revenue Transactions (Invoices, Sales Receipts, Payments)
 CREATE TABLE IF NOT EXISTS revenue_transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

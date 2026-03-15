@@ -6,11 +6,11 @@ export default async function getBurn(companyId: string, startDate: string, endD
 
   const result = await database.query(`
     SELECT
-      DATE_TRUNC('month', date) AS month,
+      DATE_TRUNC('month', transaction_date) AS month,
       SUM(amount) AS monthly_opex
-    FROM expenses
+    FROM expense_transactions
     WHERE company_id = $1
-    AND date BETWEEN $2 AND $3
+    AND transaction_date BETWEEN $2 AND $3
     GROUP BY 1
     ORDER BY 1;
   `, [companyId, startDate, endDate]);

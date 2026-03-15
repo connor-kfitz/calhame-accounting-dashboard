@@ -15,17 +15,17 @@ export default async function getRevenueExpenseChartData(companyId: string, star
     ),
     agg AS (
       SELECT
-        DATE_TRUNC('month', COALESCE(r.date, e.date)) AS month,
+        DATE_TRUNC('month', COALESCE(r.transaction_date, e.transaction_date)) AS month,
         SUM(r.amount) AS revenue,
         SUM(e.amount) AS opex
-      FROM revenue r
-      FULL OUTER JOIN expenses e
-        ON DATE_TRUNC('month', r.date) = DATE_TRUNC('month', e.date)
+      FROM revenue_transactions r
+      FULL OUTER JOIN expense_transactions e
+        ON DATE_TRUNC('month', r.transaction_date) = DATE_TRUNC('month', e.transaction_date)
       WHERE (
-        r.company_id = $1 AND r.date BETWEEN $2 AND $3
+        r.company_id = $1 AND r.transaction_date BETWEEN $2 AND $3
       )
       OR (
-        e.company_id = $1 AND e.date BETWEEN $2 AND $3
+        e.company_id = $1 AND e.transaction_date BETWEEN $2 AND $3
       )
       GROUP BY 1
     )

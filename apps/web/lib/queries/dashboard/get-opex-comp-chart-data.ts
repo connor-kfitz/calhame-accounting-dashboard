@@ -8,9 +8,9 @@ export default async function getOpexCompositionChartData(companyId: string, sta
     SELECT
       category,
       SUM(amount) AS total
-    FROM expenses
+    FROM expense_transactions
     WHERE company_id = $1
-    AND date BETWEEN $2::date AND $3::date
+    AND transaction_date BETWEEN $2::date AND $3::date
     GROUP BY category
     ORDER BY total DESC;
   `, [companyId, startDate, endDate]);
