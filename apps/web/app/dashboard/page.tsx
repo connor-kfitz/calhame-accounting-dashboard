@@ -20,7 +20,7 @@ export default async function DashboardPage() {
 
   return (
     <main className="w-full overflow-y-auto p-4 lg:p-8">
-      <DashboardHeader title="Executive P&L" description={`${hasCompanies ? "Select a company to view data" : "No companies available"}`}/>
+      <DashboardHeader title="Clients" description={`${hasCompanies ? "Select a company to view their financial data" : "No companies available"}`}/>
       {companies.length === 0
         ? <div className="grid grid-cols-1 gap-6 2xl:grid-cols-2">
             <Connect/>

@@ -7,6 +7,7 @@ import getTopExpense from "./get-top-expense";
 import getTotalOpex from "./get-total-opex";
 import getYears from "./get-years";
 import getQuarters from "./get-quarters";
+import getCompanyById from "../companies/id/get";
 
 import { DashboardData, Quarter } from "@repo/shared";
 import { getDateRangeFromQuarter, buildInfoCards } from "@/lib/helpers";
@@ -17,15 +18,17 @@ export default async function getDashboardData(companyId: string, quarter: Quart
 
   const [
     totalRevenueResult, totalCogsResult,totalOpexResult, burnResult, topExpenseResult,
-    revenueExpenseChartData, opexCompChartData, yearsResult, quarters
+    revenueExpenseChartData, opexCompChartData, yearsResult, quarters, company
   ] = await Promise.all([
     getRevenue(companyId, startDate, endDate), getCogs(companyId, startDate, endDate),
     getTotalOpex(companyId, startDate, endDate), getBurn(companyId, startDate, endDate),
     getTopExpense(companyId, startDate, endDate), getRevenueExpenseChartData(companyId, startDate, endDate),
-    getOpexCompChartData(companyId, startDate, endDate), getYears(companyId), getQuarters(companyId, year)
+    getOpexCompChartData(companyId, startDate, endDate), getYears(companyId), getQuarters(companyId, year),
+    getCompanyById(companyId)
   ]);
 
   return {
+    companyName: company?.companyName || "Company",
     years: yearsResult,
     quarters: quarters,
     infoCards: buildInfoCards(
