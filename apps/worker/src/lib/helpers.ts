@@ -14,9 +14,7 @@ export function isExpiringSoon(expiresAt: Date | null, leewayMs: number): boolea
 }
 
 export async function quickbooksRequest(
-  realmId: string,
-  accessToken: string,
-  path: string
+  realmId: string, accessToken: string, path: string
 ) {
   return withRetry(async () => {
     const baseUrl = getRequiredEnv("QUICKBOOKS_BASE_URL").replace(/\/$/, "");

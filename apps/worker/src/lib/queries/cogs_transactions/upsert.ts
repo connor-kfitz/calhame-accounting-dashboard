@@ -15,6 +15,7 @@ interface CogsTransactionData {
   amount: number;
   currencyCode?: string;
   providerMetadata?: Record<string, any>;
+  providerLastModifiedAt?: string;
 }
 
 export async function upsertCogsTransaction(companyId: string, data: CogsTransactionData, client?: PoolClient) {
@@ -35,9 +36,10 @@ export async function upsertCogsTransaction(companyId: string, data: CogsTransac
       account_name,
       amount,
       currency_code,
-      provider_metadata
+      provider_metadata,
+      provider_last_modified_at
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
     ON CONFLICT (company_id, provider_id, provider_transaction_id, provider_transaction_type)
     DO UPDATE SET
       transaction_number = EXCLUDED.transaction_number,
@@ -50,6 +52,7 @@ export async function upsertCogsTransaction(companyId: string, data: CogsTransac
       amount = EXCLUDED.amount,
       currency_code = EXCLUDED.currency_code,
       provider_metadata = EXCLUDED.provider_metadata,
+      provider_last_modified_at = EXCLUDED.provider_last_modified_at,
       updated_at = NOW()`,
     [
       companyId,
@@ -65,7 +68,8 @@ export async function upsertCogsTransaction(companyId: string, data: CogsTransac
       data.accountName || null,
       data.amount,
       data.currencyCode || 'USD',
-      data.providerMetadata ? JSON.stringify(data.providerMetadata) : null
+      data.providerMetadata ? JSON.stringify(data.providerMetadata) : null,
+      data.providerLastModifiedAt || null
     ]
   );
 }

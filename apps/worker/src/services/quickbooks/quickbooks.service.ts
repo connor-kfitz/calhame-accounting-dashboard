@@ -41,15 +41,15 @@ export async function syncQuickBooksCompany(companyId: string, entities: Entity[
     switch (entity) {
       case "revenue":
         await syncRevenue(companyId, row, endDate, pnl);
-        await syncInvoices(companyId, row.providerId, row.realmId, currentAccessToken, startDate, endDate);
+        await syncInvoices(companyId, row.providerId, row.realmId, currentAccessToken, row.connectionId, startDate, endDate);
         break;
       case "cogs":
         await syncCogs(companyId, row, endDate, pnl);
-        await syncBills(companyId, row.providerId, row.realmId, currentAccessToken, startDate, endDate);
+        await syncBills(companyId, row.providerId, row.realmId, currentAccessToken, row.connectionId, startDate, endDate);
         break;
       case "expenses":
         await syncExpenses(companyId, row, endDate, pnl);
-        await syncExpenseTransactions(companyId, row.providerId, row.realmId, currentAccessToken, startDate, endDate);
+        await syncExpenseTransactions(companyId, row.providerId, row.realmId, currentAccessToken, row.connectionId, startDate, endDate);
         break;
       default:
         console.error(`Unknown entity type: ${entity}`);

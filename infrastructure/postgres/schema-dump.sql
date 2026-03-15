@@ -141,6 +141,9 @@ CREATE TABLE IF NOT EXISTS revenue_transactions (
     
     -- Provider-specific metadata (JSON for flexible storage)
     provider_metadata JSONB,
+    
+    -- Provider modification tracking for incremental sync
+    provider_last_modified_at TIMESTAMP,
 
     -- Metadata
     created_at TIMESTAMP NOT NULL DEFAULT now(),
@@ -177,6 +180,9 @@ CREATE TABLE IF NOT EXISTS cogs_transactions (
     
     -- Provider-specific metadata (JSON for flexible storage)
     provider_metadata JSONB,
+    
+    -- Provider modification tracking for incremental sync
+    provider_last_modified_at TIMESTAMP,
 
     -- Metadata
     created_at TIMESTAMP NOT NULL DEFAULT now(),
@@ -214,6 +220,9 @@ CREATE TABLE IF NOT EXISTS expense_transactions (
     
     -- Provider-specific metadata (JSON for flexible storage)
     provider_metadata JSONB,
+    
+    -- Provider modification tracking for incremental sync
+    provider_last_modified_at TIMESTAMP,
 
     -- Metadata
     created_at TIMESTAMP NOT NULL DEFAULT now(),
@@ -230,6 +239,8 @@ CREATE INDEX IF NOT EXISTS idx_revenue_transactions_company
     ON revenue_transactions(company_id);
 CREATE INDEX IF NOT EXISTS idx_revenue_transactions_company_date 
     ON revenue_transactions(company_id, transaction_date);
+CREATE INDEX IF NOT EXISTS idx_revenue_transactions_modified 
+    ON revenue_transactions(company_id, provider_last_modified_at);
 
 CREATE INDEX IF NOT EXISTS idx_cogs_transactions_date 
     ON cogs_transactions(transaction_date);
@@ -237,6 +248,8 @@ CREATE INDEX IF NOT EXISTS idx_cogs_transactions_company
     ON cogs_transactions(company_id);
 CREATE INDEX IF NOT EXISTS idx_cogs_transactions_company_date 
     ON cogs_transactions(company_id, transaction_date);
+CREATE INDEX IF NOT EXISTS idx_cogs_transactions_modified 
+    ON cogs_transactions(company_id, provider_last_modified_at);
 
 CREATE INDEX IF NOT EXISTS idx_expense_transactions_date 
     ON expense_transactions(transaction_date);
@@ -244,6 +257,8 @@ CREATE INDEX IF NOT EXISTS idx_expense_transactions_company
     ON expense_transactions(company_id);
 CREATE INDEX IF NOT EXISTS idx_expense_transactions_company_date 
     ON expense_transactions(company_id, transaction_date);
+CREATE INDEX IF NOT EXISTS idx_expense_transactions_modified 
+    ON expense_transactions(company_id, provider_last_modified_at);
 
 -- Trigger to auto-update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()

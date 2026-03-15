@@ -16,6 +16,7 @@ interface ExpenseTransactionData {
   amount: number;
   currencyCode?: string;
   providerMetadata?: Record<string, any>;
+  providerLastModifiedAt?: string;
 }
 
 export async function upsertExpenseTransaction(companyId: string, data: ExpenseTransactionData, client?: PoolClient) {
@@ -37,9 +38,10 @@ export async function upsertExpenseTransaction(companyId: string, data: ExpenseT
       account_name,
       amount,
       currency_code,
-      provider_metadata
+      provider_metadata,
+      provider_last_modified_at
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
     ON CONFLICT (company_id, provider_id, provider_transaction_id, provider_transaction_type)
     DO UPDATE SET
       transaction_number = EXCLUDED.transaction_number,
@@ -53,12 +55,14 @@ export async function upsertExpenseTransaction(companyId: string, data: ExpenseT
       amount = EXCLUDED.amount,
       currency_code = EXCLUDED.currency_code,
       provider_metadata = EXCLUDED.provider_metadata,
+      provider_last_modified_at = EXCLUDED.provider_last_modified_at,
       updated_at = NOW()`,
     [
       companyId, data.providerId, data.transactionId, data.transactionType, data.transactionNumber || null,
       data.transactionDate, data.vendorId || null, data.vendorName || null, data.category || null,
       data.description || null, data.accountId || null, data.accountName || null, data.amount,
-      data.currencyCode || 'USD', data.providerMetadata ? JSON.stringify(data.providerMetadata) : null
+      data.currencyCode || 'USD', data.providerMetadata ? JSON.stringify(data.providerMetadata) : null,
+      data.providerLastModifiedAt || null
     ]
   );
 }
