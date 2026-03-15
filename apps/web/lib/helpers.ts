@@ -1,5 +1,5 @@
 import { Quarter, InfoCardData } from "@repo/shared";
-import { getAverageMonthlyBurn, getBurnEfficency, getCogsPercentageOfRevenue, getExpensePercentageOfOpex, getGrossMarginPercentage, getNetProfitLoss, getOpexRevenueRatio, getProfit } from "@/lib/accounting-formulas";
+import { getAverageMonthlyBurn, getBurnEfficency, getCogsPercentageOfRevenue, getExpensePercentageOfOpex, getGrossMarginPercentage, getNetProfitLoss, getOpexRevenueRatio, getProfit, formatCurrency } from "@/lib/accounting-formulas";
 
 export function getDateRangeFromQuarter(quarter: Quarter, year: number) {
   let startDate: string;
@@ -46,7 +46,7 @@ export function buildInfoCards(
   if (totalRevenueResult != null) {
     cards.push({
       title: "Total Revenue",
-      value: `$${totalRevenueResult}`,
+      value: `$${formatCurrency(totalRevenueResult)}`,
       info: `Revenue for ${year}`
     });
   }
@@ -54,7 +54,7 @@ export function buildInfoCards(
   if (totalCogsResult != null && totalRevenueResult != null) {
     cards.push({
       title: "Cost of Goods Sold",
-      value: `$${totalCogsResult}`,
+      value: `$${formatCurrency(totalCogsResult)}`,
       info: `${getCogsPercentageOfRevenue(totalCogsResult, totalRevenueResult)}% of Rev`
     });
   }
@@ -69,9 +69,10 @@ export function buildInfoCards(
 
   if (totalRevenueResult != null && totalCogsResult != null && totalOpexResult != null) {
     const net = getNetProfitLoss(totalRevenueResult, totalCogsResult, totalOpexResult);
+    const isNegative = net.startsWith('-');
     cards.push({
       title: "Net Profit/Loss",
-      value: net < 0 ? `-$${Math.abs(net).toFixed(2)}` : `$${net.toFixed(2)}`,
+      value: isNegative ? `-$${net.substring(1)}` : `$${net}`,
       info: "Includes all expenses"
     });
   }
@@ -79,7 +80,7 @@ export function buildInfoCards(
   if (totalOpexResult != null && totalRevenueResult != null) {
     cards.push({
       title: "Total Opex",
-      value: `$${totalOpexResult}`,
+      value: `$${formatCurrency(totalOpexResult)}`,
       info: `${getBurnEfficency(totalOpexResult, totalRevenueResult)}`
     });
   }
@@ -101,9 +102,10 @@ export function buildInfoCards(
   }
 
   if (topExpenseResult != null && totalOpexResult != null) {
+    const formattedCategory = topExpenseResult.category.replace(/:\s*/g, ': ');
     cards.push({
       title: "Top Expense",
-      value: `${topExpenseResult.category}`,
+      value: `${formattedCategory}`,
       info: `${getExpensePercentageOfOpex(topExpenseResult.total, totalOpexResult)}% of OpEx`
     });
   }

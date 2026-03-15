@@ -8,12 +8,23 @@ export function getGrossMarginPercentage(cogs: number, revenue: number): number 
   return parseFloat((((revenue - cogs) / revenue) * 100).toFixed(2));
 }
 
-export function getProfit(revenue: number, cogs: number): number {
-  return parseFloat((revenue - cogs).toFixed(2));
+export function formatCurrency(value: number): string {
+  return Number(value).toLocaleString();
 }
 
-export function getNetProfitLoss(revenue: number, cogs: number, opex: number): number {
-  return parseFloat((revenue - cogs - opex).toFixed(2));
+export function formatCurrencySigned(value: number): string {
+  const absValue = Math.abs(value);
+  return value < 0 ? `-${formatCurrency(absValue)}` : formatCurrency(value);
+}
+
+export function getProfit(revenue: number, cogs: number): string {
+  const profit = parseFloat((revenue - cogs).toFixed(2));
+  return formatCurrency(profit);
+}
+
+export function getNetProfitLoss(revenue: number, cogs: number, opex: number): string {
+  const net = parseFloat((revenue - cogs - opex).toFixed(2));
+  return formatCurrencySigned(net);
 }
 
 export function getBurnEfficency(totalOpex: number, totalRevenue: number): string {
@@ -29,8 +40,9 @@ export function getOpexRevenueRatio(totalOpex: number, totalRevenue: number): nu
   return parseFloat(((totalOpex / totalRevenue) * 100).toFixed(2));
 }
 
-export function getAverageMonthlyBurn(totalBurn: number, period: number): number {
-  return parseFloat((totalBurn / period).toFixed(2));
+export function getAverageMonthlyBurn(totalBurn: number, period: number): string {
+  const burn = parseFloat((totalBurn / period).toFixed(2));
+  return formatCurrency(burn);
 }
 
 export function getExpensePercentageOfOpex(expenseAmount: number, totalOpex: number): number {
