@@ -17,7 +17,9 @@ export default function RevenueExpenseCard({ data }: RevenueExpenseCardProps) {
   
   const [chartType, setChartType] = useState<"bar" | "line">("bar");
 
-  if (!data || data.length === 0) return null;
+  const hasAnyData = data.some(row => row.revenue !== null || row.expenses !== null);
+
+  if (!data || data.length === 0 || !hasAnyData) return null;
   
   return (
     <Card className="border-border shadow-sm">
