@@ -12,7 +12,10 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Calhame - CFO Dashboard",
-  description: "CFO dashboard built for Quickbooks integrations and data visualization."
+  description: "CFO dashboard built for Quickbooks integrations and data visualization.",
+  icons: {
+    icon: "/calhame-financial-logo.svg"
+  }
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
