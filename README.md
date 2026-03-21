@@ -38,8 +38,11 @@ This repo expects env vars in the app(s) where they run.
 - `TOKEN_ENCRYPTION_KEY`: 32-byte key (base64 or hex) used to encrypt tokens for storage
 - `QUICKBOOKS_CLIENT_ID`: Intuit app client id
 - `QUICKBOOKS_CLIENT_SECRET`: Intuit app client secret
-- `QUICKBOOKS_REDIRECT_URI`: OAuth redirect URI (must match your Intuit app config)
 - `QUICKBOOKS_BASE_URL`: QuickBooks API base URL (sandbox or production)
+
+**Note:** The QuickBooks OAuth redirect URI is now dynamically generated based on your deployment URL. Make sure to configure your Intuit app to accept:
+- `http://localhost:3000/api/quickbooks/callback` for local development
+- `https://your-domain.com/api/quickbooks/callback` for production
 
 ### Worker (`apps/worker/.env`)
 

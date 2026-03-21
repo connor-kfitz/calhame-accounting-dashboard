@@ -143,3 +143,22 @@ export function getSyncAvailability(lastSyncedAt: Date | null): {
 
   return { canSync: false, timeRemaining };
 }
+
+export function generateURIFromBase(path: string, headers?: Headers): string {
+
+  const vercelUrl = process.env.VERCEL_URL;
+  
+  if (vercelUrl) {
+    return `https://${vercelUrl}${path}`;
+  }
+  
+  if (headers) {
+    const host = headers.get('x-forwarded-host') || headers.get('host');
+    if (host) {
+      const protocol = host.includes('localhost') ? 'http' : 'https';
+      return `${protocol}://${host}${path}`;
+    }
+  }
+  
+  return `http://localhost:3000${path}`;
+}

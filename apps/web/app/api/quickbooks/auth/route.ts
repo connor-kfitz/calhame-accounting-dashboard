@@ -1,10 +1,11 @@
 import { intuitAuthScope } from "@/lib/constants";
+import { generateURIFromBase } from "@/lib/helpers";
 import { randomBytes } from "crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 const clientId = process.env.QUICKBOOKS_CLIENT_ID!;
-const redirectUri = process.env.QUICKBOOKS_REDIRECT_URI!;
+const redirectUri = generateURIFromBase("/api/quickbooks/callback");
 
 export async function GET() {
   try {
@@ -14,7 +15,7 @@ export async function GET() {
 
     const state = randomBytes(16).toString("hex");
 
-    const cookieStore = await cookies()
+    const cookieStore = await cookies();
 
     cookieStore.set("qb_oauth_state", state, {
       httpOnly: true,

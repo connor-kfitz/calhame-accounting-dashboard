@@ -12,10 +12,10 @@ import { auth } from "@clerk/nextjs/server";
 import { pool } from "@/lib/db";
 import { accountingQueue } from "@/lib/accounting-queue";
 import { ENTITIES, SYNC_COMPANY_JOB } from "@repo/shared";
+import { generateURIFromBase } from "@/lib/helpers";
 
 const clientId = process.env.QUICKBOOKS_CLIENT_ID!;
 const clientSecret = process.env.QUICKBOOKS_CLIENT_SECRET!;
-const redirectUri = process.env.QUICKBOOKS_REDIRECT_URI!;
 
 export async function GET(req: NextRequest) {
 
@@ -50,9 +50,11 @@ export async function GET(req: NextRequest) {
   cookieStore.delete("qb_oauth_state");
 
   try {
-    if (!clientId || !clientSecret || !redirectUri) {
+    if (!clientId || !clientSecret) {
       throw new Error("Missing QuickBooks OAuth environment variables");
     }
+
+    const redirectUri = generateURIFromBase("/api/quickbooks/callback", req.headers);
 
     const body = new URLSearchParams({
       grant_type: "authorization_code",
