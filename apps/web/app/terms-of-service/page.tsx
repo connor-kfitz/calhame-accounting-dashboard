@@ -560,7 +560,7 @@ export default function TermsOfServicePage() {
                 For questions, concerns, or notices regarding these Terms or the Service, please contact the Company at:
               </p>
               <p className="text-muted-foreground ml-4 mb-2">
-                <strong>Calhame Financial</strong><br />
+                <strong>Calhame Financial</strong><br/>
                 Email:{" "}
                 <a href="mailto:adam@camenzu.li" className="text-primary hover:underline">
                   adam@camenzu.li
