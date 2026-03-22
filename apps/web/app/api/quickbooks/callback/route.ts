@@ -19,7 +19,7 @@ const clientSecret = process.env.QUICKBOOKS_CLIENT_SECRET!;
 
 export async function GET(req: NextRequest) {
 
-  const { searchParams } = new URL(req.url);
+  const { searchParams, origin } = new URL(req.url);
 
   const { userId: clerkId } = await auth();
 
@@ -31,20 +31,24 @@ export async function GET(req: NextRequest) {
   const realmId = searchParams.get("realmId");
 
   if (!code) {
-    return Response.json({ error: { message: "Missing authorization code" } }, { status: 400 });
+    const redirectUrl = `${origin}/dashboard/connect?error=missing_code&message=${encodeURIComponent("Authorization code not received from QuickBooks")}`;
+    return NextResponse.redirect(redirectUrl);
   }
 
   if (!state || !storedState || state !== storedState) {
     cookieStore.delete("qb_oauth_state");
-    return Response.json({ error: { message: "Invalid state" } }, { status: 400 });
+    const redirectUrl = `${origin}/dashboard/connect?error=invalid_state&message=${encodeURIComponent("Invalid security token. Please try again")}`;
+    return NextResponse.redirect(redirectUrl);
   }
 
   if (!realmId) {
-    return Response.json({ error: { message: "Missing realmId" } }, { status: 400 });
+    const redirectUrl = `${origin}/dashboard/connect?error=missing_realm&message=${encodeURIComponent("Company ID not received from QuickBooks")}`;
+    return NextResponse.redirect(redirectUrl);
   }
   
   if (!clerkId) {
-    return Response.json({ error: { message: "Not authenticated" } }, { status: 401 });
+    const redirectUrl = `${origin}/dashboard/connect?error=unauthorized&message=${encodeURIComponent("Please sign in to connect QuickBooks")}`;
+    return NextResponse.redirect(redirectUrl);
   }
 
   cookieStore.delete("qb_oauth_state");
@@ -79,10 +83,8 @@ export async function GET(req: NextRequest) {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Token exchange failed:", errorText);
-      return Response.json(
-        { error: { message: "Failed to exchange code for tokens" } },
-        { status: 500 }
-      );
+      const redirectUrl = `${origin}/dashboard/connect?error=token_exchange&message=${encodeURIComponent("Failed to connect to QuickBooks. Please try again")}`;
+      return NextResponse.redirect(redirectUrl);
     }
 
     const data = await response.json();
@@ -117,7 +119,7 @@ export async function GET(req: NextRequest) {
       }
 
       if (!company.id || !provider.id) {
-        return new Response(JSON.stringify({ error: { message: 'Missing parameters' } }), { status: 400 });
+        throw new Error("Missing company or provider ID");
       }
     
       await accountingQueue.add(SYNC_COMPANY_JOB, { companyId: company.id, provider: "quickbooks", entities: ENTITIES }, {
@@ -136,12 +138,13 @@ export async function GET(req: NextRequest) {
       client.release();
     }
     
-    const { origin } = new URL(req.url);
     const redirectUrl = `${origin}/dashboard/connect`;
 
     return NextResponse.redirect(redirectUrl);
   } catch (error) {
     console.error("Callback error:", error);
-    return Response.json({ error: { message: "Internal server error" } }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+    const redirectUrl = `${origin}/dashboard/connect?error=connection_failed&message=${encodeURIComponent(`Failed to connect QuickBooks: ${errorMessage}`)}`;
+    return NextResponse.redirect(redirectUrl);
   }
 }
