@@ -3,6 +3,14 @@ import { upsertCogsTransaction } from "../../lib/queries/cogs_transactions/upser
 import { getLastSyncedAt } from "../../lib/queries/provider_sync_state/get-last-synced.js";
 import { upsertProviderSyncStateLastSynced } from "../../lib/queries/provider_sync_state/upsert-provider-sync-state-last-synced.js";
 
+const COGS_ENTITY_TYPES = [
+  "Bill",
+  "VendorCredit"
+] as const;
+
+type CogsEntityType = typeof COGS_ENTITY_TYPES[number];
+
+
 export async function syncBills(
   companyId: string, providerId: string, realmId: string, accessToken: string, 
   connectionId: string
@@ -11,48 +19,140 @@ export async function syncBills(
   
   const lastSyncedAt = await getLastSyncedAt(connectionId, entityType);
   
-  console.log(`[Bill Sync] Fetching bills for company ${companyId}`);
+  console.log(`[COGS Sync] Starting sync for company ${companyId}`);
 
   if (lastSyncedAt) {
-    console.log(`[Bill Sync] Incremental sync from ${lastSyncedAt.toISOString()}`);
+    console.log(`[COGS Sync] Incremental sync from ${lastSyncedAt.toISOString()}`);
   } else {
-    console.log(`[Bill Sync] Full sync - fetching ALL historical data`);
+    console.log(`[COGS Sync] Full sync - fetching ALL historical data`);
   }
   
+  let grandTotalTransactions = 0;
+  let grandTotalLineItems = 0;
+
+  for (const qbEntityType of COGS_ENTITY_TYPES) {
+    try {
+      console.log(`\n[COGS Sync] === Syncing ${qbEntityType} transactions ===`);
+      
+      const { transactionCount, lineItemCount } = await syncCogsEntityType(
+        qbEntityType,
+        companyId,
+        providerId,
+        realmId,
+        accessToken,
+        lastSyncedAt
+      );
+      
+      grandTotalTransactions += transactionCount;
+      grandTotalLineItems += lineItemCount;
+      
+      console.log(`[COGS Sync] ${qbEntityType} completed: ${transactionCount} transactions, ${lineItemCount} line items`);
+    } catch (error) {
+      console.error(`[COGS Sync] ERROR syncing ${qbEntityType}:`, error);
+      console.error(`[COGS Sync] Continuing with remaining entity types...`);
+    }
+  }
+  
+  await upsertProviderSyncStateLastSynced(connectionId, entityType);
+  
+  console.log(`\n[COGS Sync] === COMPLETE ===`);
+  console.log(`[COGS Sync] Total: ${grandTotalTransactions} transactions, ${grandTotalLineItems} line items`);
+}
+
+async function syncCogsEntityType(
+  qbEntityType: CogsEntityType,
+  companyId: string,
+  providerId: string,
+  realmId: string,
+  accessToken: string,
+  lastSyncedAt: Date | null
+): Promise<{ transactionCount: number; lineItemCount: number }> {
   let startPosition = 1;
-  let totalFetched = 0;
+  let transactionCount = 0;
+  let lineItemCount = 0;
   let pageNumber = 1;
   
   while (true) {
-    const bills = await fetchBills(realmId, accessToken, lastSyncedAt, startPosition);
+    const transactions = await fetchCogsEntityType(
+      qbEntityType,
+      realmId,
+      accessToken,
+      lastSyncedAt,
+      startPosition
+    );
     
-    console.log(`[Bill Sync] Page ${pageNumber}: Found ${bills.length} bills`);
+    if (transactions.length === 0) {
+      if (pageNumber === 1) {
+        console.log(`[COGS Sync] ${qbEntityType} - No transactions found`);
+      }
+      break;
+    }
     
-    for (const bill of bills) {
-      const billData = parseBill(bill);
-      const lastModifiedAt = bill.MetaData?.LastUpdatedTime || null;
-      
-      for (const lineItem of billData.lineItems) {
-        await upsertCogsTransaction(companyId, {
-          providerId,
-          transactionId: `${bill.Id}-${lineItem.lineNum}`,
-          transactionType: 'Bill',
-          transactionNumber: bill.DocNumber || null,
-          transactionDate: bill.TxnDate,
-          vendorId: bill.VendorRef?.value || null,
-          vendorName: bill.VendorRef?.name || null,
-          description: lineItem.description || undefined,
-          accountId: lineItem.accountId || undefined,
-          accountName: lineItem.accountName || undefined,
-          amount: lineItem.amount,
-          providerLastModifiedAt: lastModifiedAt
-        });
+    console.log(`[COGS Sync] ${qbEntityType} - Page ${pageNumber}: Found ${transactions.length} transactions`);
+    
+    for (const transaction of transactions) {
+      try {
+        const parsed = parseCogsTransaction(transaction, qbEntityType);
+        const lastModifiedAt = transaction.MetaData?.LastUpdatedTime || null;
+        
+        if (parsed.lineItems.length === 0) {
+          console.warn(
+            `[COGS Sync] ${qbEntityType} ${transaction.Id} has no qualifying line items. ` +
+            `Total lines: ${transaction.Line?.length || 0}`
+          );
+        }
+        
+        const metadata: Record<string, any> = {
+          qbEntityType,
+        };
+        
+        if (transaction.DueDate) {
+          metadata.dueDate = transaction.DueDate;
+        }
+        if (transaction.Balance != null) {
+          metadata.balance = transaction.Balance;
+        }
+        if (transaction.PaymentMethodRef) {
+          metadata.paymentMethod = transaction.PaymentMethodRef.name;
+        }
+        
+        for (const lineItem of parsed.lineItems) {
+          await upsertCogsTransaction(companyId, {
+            providerId,
+            transactionId: `${transaction.Id}-${lineItem.lineNum}`,
+            transactionType: qbEntityType,
+            transactionNumber: transaction.DocNumber || null,
+            transactionDate: transaction.TxnDate,
+            vendorId: transaction.VendorRef?.value || null,
+            vendorName: transaction.VendorRef?.name || null,
+            description: lineItem.description || undefined,
+            accountId: lineItem.accountId || undefined,
+            accountName: lineItem.accountName || undefined,
+            amount: lineItem.amount,
+            providerMetadata: metadata,
+            providerLastModifiedAt: lastModifiedAt
+          });
+          
+          lineItemCount++;
+        }
+        
+        transactionCount++;
+      } catch (error) {
+        console.error(
+          `[COGS Sync] ERROR processing ${qbEntityType} ${transaction.Id}:`,
+          error
+        );
       }
     }
     
-    totalFetched += bills.length;
+    if (transactions.length < 1000) {
+      break;
+    }
     
-    if (bills.length < 1000) {
+    // Only paginate for full syncs (no lastSyncedAt)
+    // Incremental syncs return all matching results in one query
+    if (lastSyncedAt) {
+      console.log(`[COGS Sync] ${qbEntityType} - Incremental sync returned ${transactions.length} results (max 1000). Some results may be missing if > 1000.`);
       break;
     }
     
@@ -60,12 +160,10 @@ export async function syncBills(
     pageNumber++;
   }
   
-  await upsertProviderSyncStateLastSynced(connectionId, entityType);
-  
-  console.log(`[Bill Sync] Completed - Total processed: ${totalFetched} bills`);
+  return { transactionCount, lineItemCount };
 }
 
-interface ParsedBill {
+interface ParsedCogsTransaction {
   lineItems: Array<{
     lineNum: number;
     description: string;
@@ -75,56 +173,76 @@ interface ParsedBill {
   }>;
 }
 
-function parseBill(bill: any): ParsedBill {
-  const lineItems: ParsedBill['lineItems'] = [];
+function parseCogsTransaction(
+  transaction: any,
+  entityType: CogsEntityType
+): ParsedCogsTransaction {
+  const lineItems: ParsedCogsTransaction['lineItems'] = [];
   
-  const lines = bill.Line || [];
+  const lines = transaction.Line || [];
   
   for (const line of lines) {
-    if (line.DetailType === 'AccountBasedExpenseLineDetail') {
+    if (line.DetailType === "AccountBasedExpenseLineDetail") {
       const expenseDetail = line.AccountBasedExpenseLineDetail || {};
       const accountRef = expenseDetail.AccountRef || {};
       
       lineItems.push({
         lineNum: line.LineNum || 0,
-        description: line.Description || accountRef.name || 'Bill Line Item',
+        description: line.Description || accountRef.name || "COGS Line Item",
         accountId: accountRef.value || null,
         accountName: accountRef.name || null,
-        amount: parseFloat(line.Amount || '0')
+        amount: parseFloat(line.Amount || "0")
       });
-    }
-    else if (line.DetailType === 'ItemBasedExpenseLineDetail') {
+    } else if (line.DetailType === "ItemBasedExpenseLineDetail") {
       const itemDetail = line.ItemBasedExpenseLineDetail || {};
       const itemRef = itemDetail.ItemRef || {};
       
       lineItems.push({
         lineNum: line.LineNum || 0,
-        description: line.Description || itemRef.name || 'Bill Line Item',
+        description: line.Description || itemRef.name || "COGS Line Item",
         accountId: itemDetail.AccountRef?.value || null,
         accountName: itemDetail.AccountRef?.name || null,
-        amount: parseFloat(line.Amount || '0')
+        amount: parseFloat(line.Amount || "0")
       });
+    } else if (line.DetailType) {
+      console.warn(
+        `[COGS Sync] Unsupported DetailType '${line.DetailType}' in ${entityType} ${transaction.Id}, Line ${line.LineNum}`
+      );
     }
   }
   
   return { lineItems };
 }
 
-async function fetchBills(
-  realmId: string, accessToken: string, lastSyncedAt: Date | null, startPosition: number = 1
-) {
-  let query: string;
-  
-  if (lastSyncedAt) {
-    const lastSyncedISO = lastSyncedAt.toISOString();
-    query = `SELECT * FROM Bill WHERE Metadata.LastUpdatedTime > '${lastSyncedISO}' MAXRESULTS 1000`;
-  } else {
-    query = `SELECT * FROM Bill ORDERBY Id MAXRESULTS 1000 STARTPOSITION ${startPosition}`;
-  }
-  
-  const encodedQuery = encodeURIComponent(query);
-  const path = `query?query=${encodedQuery}`;
+async function fetchCogsEntityType(
+  entityType: CogsEntityType,
+  realmId: string,
+  accessToken: string,
+  lastSyncedAt: Date | null,
+  startPosition: number = 1
+): Promise<any[]> {
+  try {
+    let query: string;
+    
+    if (lastSyncedAt) {
+      const lastSyncedISO = lastSyncedAt.toISOString();
+      query = `SELECT * FROM ${entityType} WHERE Metadata.LastUpdatedTime > '${lastSyncedISO}' MAXRESULTS 1000`;
+    } else {
+      query = `SELECT * FROM ${entityType} ORDERBY Id MAXRESULTS 1000 STARTPOSITION ${startPosition}`;
+    }
+    
+    const encodedQuery = encodeURIComponent(query);
+    const path = `query?query=${encodedQuery}`;
 
-  const result = await quickbooksRequest(realmId, accessToken, path);
-  return result.QueryResponse?.Bill || [];
+    const result = await quickbooksRequest(realmId, accessToken, path);
+    return result.QueryResponse?.[entityType] || [];
+  } catch (error: any) {
+    if (error.status === 400) {
+      console.warn(
+        `[COGS Sync] ${entityType} query failed with 400 - entity type may not be supported or available in this QuickBooks account. Error: ${error.message}`
+      );
+      return [];
+    }
+    throw error;
+  }
 }

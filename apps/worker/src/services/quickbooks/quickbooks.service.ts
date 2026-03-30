@@ -62,7 +62,7 @@ async function refreshQuickBooksAccessToken(refreshToken: string) {
         headers: {
           Authorization:
             "Basic " + Buffer.from(`${clientId}:${clientSecret}`).toString("base64"),
-          "Content-Type": "application/x-www-form-urlencoded"
+            "Content-Type": "application/x-www-form-urlencoded"
         },
         body: body.toString()
       }
