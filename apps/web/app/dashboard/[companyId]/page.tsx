@@ -24,9 +24,14 @@ export default async function DynamicDashboardPage({ params, searchParams }: {
   const { quarter, year } = searchParamsData ?? {};
   
   const quarterValue = quarter ?? "year";
-  const yearValue = year ? parseInt(year, 10) : new Date().getFullYear();
+  let yearValue = year ? parseInt(year, 10) : new Date().getFullYear();
   
-  const dashboardData = await getDashboardData(companyId, quarterValue, yearValue);
+  let dashboardData = await getDashboardData(companyId, quarterValue, yearValue);
+
+  if (!dashboardData.years.includes(yearValue) && dashboardData.years.length > 0) {
+    yearValue = Math.max(...dashboardData.years);
+    dashboardData = await getDashboardData(companyId, quarterValue, yearValue);
+  }
 
   const hasYearData = dashboardData.years.includes(yearValue);
   const hasQuarterData = quarterValue === "year" || dashboardData.quarters.includes(quarterValue);
