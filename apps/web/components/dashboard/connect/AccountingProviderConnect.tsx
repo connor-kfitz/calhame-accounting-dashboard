@@ -19,16 +19,15 @@ interface AccountingProviderConnectProps {
 }
 
 export default function AccountingProviderConnect({ provider, companies, setErrorDialog }: AccountingProviderConnectProps) {
-	const [loadingDisconnect, setLoadingDisconnect] = useState<string>("");
-	const [loadingSync, setLoadingSync] = useState<boolean>(false);
+	const [loadingDisconnect, setLoadingDisconnect] = useState<Set<string>>(new Set());
+	const [loadingSync, setLoadingSync] = useState<Set<string>>(new Set());
 
   const connected = companies.length > 0;
   const providerCapitalized = capitalizeFirstLetter(provider);
   const router = useRouter();
 
   async function handleDisconnect(companyMembershipId: string, companyName: string) {
-		if (loadingDisconnect) return;
-		setLoadingDisconnect(companyMembershipId);
+		setLoadingDisconnect(prev => new Set(prev).add(companyMembershipId));
     try {
       const res = await fetch(`/api/company-memberships/${companyMembershipId}`, {
         method: 'DELETE',
@@ -45,13 +44,16 @@ export default function AccountingProviderConnect({ provider, companies, setErro
 				message: `An error occurred while disconnecting ${companyName}. Please try again later.`
       });
 		} finally {
-      setLoadingDisconnect("");
+      setLoadingDisconnect(prev => {
+        const next = new Set(prev);
+        next.delete(companyMembershipId);
+        return next;
+      });
     }
   }
 
 	async function handleSync(companyId: string, provider: string, companyName: string) {
-		if (loadingSync) return;
-		setLoadingSync(true);
+		setLoadingSync(prev => new Set(prev).add(companyId));
     try {
 			const res = await fetch("/api/microservice/sync-company", {
 				method: "POST",
@@ -71,7 +73,11 @@ export default function AccountingProviderConnect({ provider, companies, setErro
 				message: `An error occurred while starting a sync for ${companyName}. Please try again later.`
 			});
 		} finally {
-			setLoadingSync(false);
+			setLoadingSync(prev => {
+				const next = new Set(prev);
+				next.delete(companyId);
+				return next;
+			});
 		}
 	}
 
@@ -112,11 +118,11 @@ export default function AccountingProviderConnect({ provider, companies, setErro
                     variant="outline"
                     size="sm"
                     onClick={() => handleDisconnect(company.companyMembershipId, company.companyName)}
-                    disabled={Boolean(loadingDisconnect)}
+                    disabled={loadingDisconnect.has(company.companyMembershipId)}
                     className="hover:bg-destructive hover:text-destructive-foreground hover:border-destructive hover:text-white"
                   >
                     <Link2Off className="mr-1 h-4 w-4"/>
-                    {loadingDisconnect === company.companyMembershipId
+                    {loadingDisconnect.has(company.companyMembershipId)
                       ? <>
                           <Spinner className="ml-1"/>
                           <span className="sr-only">Disconnecting</span>
@@ -129,8 +135,8 @@ export default function AccountingProviderConnect({ provider, companies, setErro
                     provider={provider}
                     companyName={company.companyName}
                     lastSyncRequestedAt={company.lastSyncRequestedAt}
-                    disabled={Boolean(loadingDisconnect)}
-                    isLoading={loadingSync}
+                    disabled={loadingDisconnect.has(company.companyMembershipId) || loadingSync.has(company.companyId)}
+                    isLoading={loadingSync.has(company.companyId)}
                     onSync={handleSync}
                   />
                 </div>
